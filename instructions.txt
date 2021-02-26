@@ -1,0 +1,193 @@
+Setup
+
+a. Download sockets.tar.gz:
+
+sockets.tar.gz  Download
+
+b. Copy sockets.tar.gz to a CS lab machine.
+
+c. Log in to a CS lab machine (either locally or over SSH).
+
+d. Un-tar/gzip the file on the CS lab machine.
+
+$ tar -zxvf sockets.tar.gz
+
+(Note: LearningSuite does something weird to my tar.gz files, so you might need to do this:
+
+$ gunzip sockets.tar.gz; tar -xvf sockets.tar
+
+)
+
+e. Change directory, and run "make" to build two executables: client and server:
+
+cd sockets
+make
+
+f. Start a tmux session.  Create three panes, such that the window looks like this:
+
+--------------------------
+|  remote  |   remote    |
+| (server)  | (analysis) |
+------------|                  |
+|  local     |                   |
+| (client)  |                   |
+---------------------------
+
+g. On the two "remote" panes, ssh to a different CS lab machine machine (see a list of machine names here).  You must log in to the same lab machine from both "remote" panes.
+
+
+Part 1: UDP
+
+1. Analyzing client.c, answer the following:
+
+a) What two system calls are used to create and prepare a (UDP) client socket for reading and writing?
+b) Describe how your client might be implemented differently if the latter call were not used.
+
+Hint: to answer these questions, you will need to inspect a) the code itself and b) the man pages for connect and udp.
+
+2. In the top-left "remote" pane, run the ./server executable on a port of your choosing (but should be above 1023). Show the command line you used.
+
+3. In the right "remote" pane, use the ss command to show only the services "listening" (waiting for incoming data) on UDP ports (see the man page for how to select only services listening, and only those using UDP). Use the -p option to display the PIDs and command names for the services listed.  Use the "-n" option to  have it show addresses instead of names.  Finally, after all the command-line options, filter by the local port that you have selected for the server by adding the following (including quotes): "sport = :port" (replace "port" with the actual port you used). Show the following:
+
+a) the command line you used;
+b) its output; and
+c) a brief explanation of what you see.
+
+In the end, your running instance of server should be the only thing listed.  Experiment with the options you passed to ss to see different output.
+
+4. With the server running on the remote host (in the top-left "remote" pane), execute the client program in the bottom-left "local" pane, such that it sends the following strings, separately, to the server via a UDP socket: foo, bar, baz, and catvideo.  Note: you can use the name of the host or its address.  If you don't see the strings show up, interrupt (ctrl-c) and re-run the client, this time using the "-4" option to force the client to use IPv4.  Show the following:
+
+a) the command line you used to run the client program; and
+b) the console output from the client.
+
+Make the following modifications:
+    - Modify server.c such that it sleeps for 2 seconds immediately after calling recvfrom() on the socket.
+    - Modify client.c such that it does not attempt to read from the socket--or print what it read--after writing to the socket.  For this one, comment out the appropriate code rather than removing it (you'll want to use it later).
+Re-run "make" to rebuild both binaries.  Interrupt and restart the server in the top-left "remote" pane.
+
+5. With the server running on the remote host (in the top-left "remote" pane), execute (again) the client command you ran in #4, sending the same strings as before.  Answer the following questions:
+
+a) how many calls to write() (or send()) are made by the client;
+b) assuming no network loss, how many datagrams have been received by the kernel of the server-side process before the server calls recvfrom() the second time;
+c) how many total calls to recvfrom() are required for the server process to get all the datagrams/bytes that were sent; and
+d) what causes the seeming inefficiency with the server process receiving all the messages?
+
+Hint: to answer these questions, you will need to inspect a) the code itself, b) the output, and c) the man pages for recv and udp.  See also questions 16 - 19 at the end of this assignment.
+
+
+Part 2: TCP
+
+Make the following modifications:
+    - Modify client.c:
+        - make the socket use TCP instead of UDP;
+        - uncomment the read/print code that you commented out in Part 1.
+    - Modify server.c:
+        - make the server socket use TCP instead of UDP;
+        - prior to the "for" loop (i.e., "for (;;)"), use the listen() function on the TCP server socket (you can use a backlog value of 100);
+        - immediately after the call to listen(), use the accept() function to wait for a client to connect and create/return a new client socket (note that you can re-use some of the arguments from recvfrom() below);
+        - change the recvfrom() call to recv() (note that you just need to remove some of the arguments);
+        - use the socket / file descriptor returned by accept() in the recv() and send() calls;
+        - break out of the loop if recv() returns 0 bytes.  This is an indicator that the server has closed its end of the connection and is effectively EOF.
+Re-run "make" to rebuild both binaries.  Interrupt and restart the server in the top-left "remote" pane.
+
+6. How does the role of the original socket (i.e., returned from the call to socket()) change with the changes you have made?
+
+7. With the new changes you have implemented, how have the semantics associated with the call to connect() changed?  That is, what will happen now when you call connect that is different from when you called connect with a UDP socket?
+
+8. In the right "remote" pane, use the ss command to show only the services listening (waiting for incoming data) on TCP ports (see the man page for how to select only services listening, and only those using TCP).  Use the -p option to display the PIDs and command names for the services listed.  Use the "-n" option to have it show addresses instead of names.  Finally, after all the command-line options, filter by the local port that you have selected for the server by adding the following (including quotes): "sport = :port" (replace "port" with the actual port you used). Show the following:
+
+a) the command line you used;
+b) its output; and
+c) a brief explanation of what you see.
+
+In the end, your running instance of server should be the only thing listed.  Experiment with the options you passed to ss to see different output.
+
+9. With the server running on the remote host (in the top-left "remote" pane), execute the client program in the bottom-left "local" pane, such that it sends the following strings, separately, to the server via a TCP socket: foo, bar, baz, and catvideo.  Show the following:
+
+a) the command line you used to run the client program; and
+b) the console output from the client.
+
+10. While the client program is running (you might need to restart the client and perhaps the server, if your run from #9 already finished), run ss in the right "remote" window to show only active (non-listening) TCP connections.  Use the -p option to display the PIDs and command names for the services listed.  Use the "-n" option to have it show addresses instead of names.  Finally, after all the command-line options, filter by the local port that you have selected for the server by adding the following (including quotes): "sport = :port" (replace "port" with the actual port you used). Show the following:
+
+a) the command line you used;
+b) its output; and
+c) a brief explanation of what you see.
+
+11. When the client program has finished running, repeat the ss command from #10. Show the following:
+
+a) the command line you used;
+b) its output; and
+c) a brief explanation of what you see.
+
+Modify client.c such that it does not attempt to read from the socket--or print what it read--after writing to the socket.  That is, comment out the same code that you did in Part 1.
+Re-run "make" to rebuild both binaries.  Interrupt and restart the server in the top-left "remote" pane.
+
+12. With the server running on the remote host (in the top-left "remote" pane), execute (again) the client command you ran in #9, sending the same strings as before.  Answer the following questions:
+
+a) how many calls to write() (or send()) are made by the client;
+b) assuming no network loss, how many bytes have been received by the kernel of the server-side process before the server calls recv() the second time;
+c) how many total calls to recv() are required for the server process to get all the bytes that were sent;
+d) how and why does this differ from what you observed in #5?
+
+Hint: to answer these questions, you will need to inspect a) the code itself, b) the output, and c) the man pages for recv and tcp.  See also questions 16 - 19 at the end of this assignment.
+
+
+Part 3: Client modification
+
+Modify client.c such that instead of looping through each command-line argument and writing it to the socket, it does the following, after the socket connection is established:
+
+    - reads (using fread()) input from stdin into a buffer (char []) until EOF is reached (max total bytes 4096);
+    - makes note of how many bytes were received from stdin and stored in the buffer; and
+    - after all data has been read from stdin (i.e., EOF has been reached), loops to send all the data that was received (i.e., the bytes you just stored in the buffer), until it has all been sent. Note that write() will return the number of bytes actually sent, which might be less than the number you requested to be sent (see the man page for more!), so you need to loop to ensure that all has been sent and write your loop termination test accordingly. This is important not only for this homework but for future labs.
+
+13. Start a netcat ("nc" command) server listening for incoming TCP connections on a port of your choosing, and such that its output is piped to the sha1sum command.  Then test your client program by redirecting the contents of alpha.txt (from the tar file) to the program's standard input (using input redirection on the shell). Show the following:
+
+a) the pipeline you used to run nc and its output (after the client finished executing); and
+b) the command line you used to run the client program.
+
+The output of the nc pipeline should equal the following: 0ef39a3f241cdd6552ad131e01afa9171b3dab8d
+
+Modify client.c, such that:
+
+    - after all the data read from stdin has been sent to the socket, it implements a loop to read all the data from the socket into a buffer.  You can experiment with different values of read() length, but 512 should work just fine.  The maximum total size of the content that you will receive is 16384 bytes.
+
+    - after all the data has been read from the socket, you write the contents of the buffer to stdout.  Just like when you were communicating with your own server, the HTTP server you are communicating with will close the connection when it is done sending data.  When this happens, recv() returns 0, for EOF.
+
+Three hints:
+
+    - you will want to keep track both the number of bytes read for a given call to read() and the the total bytes that have been read (i.e., across all iterations);
+    - with each iteration of the read loop, you will want to offset the read buffer (the one to which you are writing data read from the socket) by the total bytes read; and
+    - the data you have read is not guaranteed to be null-terminated, so after all the content has been read, if you want to use it with printf(), you should add the null termination yourself (i.e., at the index indicated by the total bytes read).
+
+14. Now, execute your client program such that a) you are sending data to the standard HTTP port at www-notls.imaal.byu.edu; b) you are redirecting the contents of http-bestill.txt (from the tar file) to the standard input of the client process (using input redirection on the shell); and c) you are redirecting the output of your client process to bestill.txt.  Note that after all the data has read, the buffer should contain the HTTP response code (200), all headers, and all three verses to a hymn--before you even start printing to stdout.  Show the command line you used to run the client program, and show the contents of bestill.txt.
+
+15.  Again execute your client program, this time such that a) you are sending data to the standard HTTP port at www-notls.imaal.byu.edu; b) you are redirecting the contents of http-socket.txt (from the tar file) to the standard input of the client process (using input redirection on the shell); c) you are piping the output of your client process to ./strip_http.py; and d) you are redirecting the standard output of ./strip_http.py to socket.jpg.  The strip_http.py script simply strips the HTTP response headers from the output, so that you are left with just the content.  The file socket.jpg should now contain a jpeg image that you can  open and view with a suitable program (e.g., a Web browser) to check its correctness.  Show the command line you used to run the client program.
+
+ 
+
+Part 4: Review Questions
+
+For this final set of questions, you are welcome to refer to previous code/questions, set up your own experiments, and/or read the man pages for recv (especially), tcp, and udp.
+
+16. What happens when you call read() (or recv()) on an open socket (UDP or TCP), and there is no data (datagrams or bytes) in the buffer to be read?
+
+17. What happens when you call read() (or recv()) on an open socket, and you specify a length that is more the number of bytes ready to be read in the buffer (TCP) or the length of the next datagram (UDP)?
+
+18. What happens you you call read() (or recv()) on an open UDP socket, and you specify a length that is less than the length of the next datagram?
+
+19. What happens you you call read() (or recv()) on an open TCP socket, and you specify a length that is less than the number of bytes ready to be read in the buffer?
+
+Close down all the terminal panes in your tmux session to close your tmux session.
+
+
+Submission:
+
+Please include the following in your submission:
+
+    - the final modified source code for client.c and server.c
+    - the output requested from each of the numbered items above, in a single file called hw5.txt.
+    - the files bestill.txt and socket.jpg from #14 and #15.
+
+Use the following command to tar/gzip your files:
+
+tar -zcvf hw5.tar.gz client.c server.c hw5.txt bestill.txt socket.jpg
