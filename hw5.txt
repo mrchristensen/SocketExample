@@ -2,27 +2,46 @@ Part 1: UDP
 
 1.
     a) What two system calls are used to create and prepare a (UDP) client socket for reading and writing?
-
+        read() and write()?
     b) Describe how your client might be implemented differently if the latter call were not used.
+        ?
 
 2. In the top-left "remote" pane, run the ./server executable on a port of your choosing (but should be above 1023). Show the command line you used.
+        mrc621@bulldozer:~/sockets$ ./server 1111
 
 3.
     a) the command line you used;
+        mrc621@bulldozer:~$ ss -p -n "sport = :1111"
 
     b) its output; and
-
+        State         Recv-Q         Send-Q                  Local Address:Port                    Peer Address:Port
+        UNCONN        0              0                             0.0.0.0:17032                        0.0.0.0:*
+        users:(("server",pid=1739,fd=3))
     c) a brief explanation of what you see.
+        Basically, its given us a report of a socket.  It says that we're currently unconnected, Recv-Q being zero means we have bytes not copied by the user program connected to this socket, 0 Send-Q means that there are 0 bytres not acknowledged by the remote host, while finally displaying the local address and port of the machine and the peer (or remote) address and port.  It also shows the program that is running that socket (the server)
 
 4.
     a) the command line you used to run the client program; and
-    b) the console output from the client.
+        mrc621@zion:~/sockets$ ./client -4 bulldozer 17032 foo bar baz catvideo
+    b) the console output from the client
+        Sent 4 bytes to server
+        Received 4 bytes: foo
+        Sent 4 bytes to server
+        Received 4 bytes: bar
+        Sent 4 bytes to server
+        Received 4 bytes: baz
+        Sent 9 bytes to server
+        Received 9 bytes: catvideo
 
 5.
     a) how many calls to write() (or send()) are made by the client;
+        4
     b) assuming no network loss, how many datagrams have been received by the kernel of the server-side process before the server calls recvfrom() the second time;
+        3
     c) how many total calls to recvfrom() are required for the server process to get all the datagrams/bytes that were sent; and
+        4, unless you count the read when we start the server - in which case 5?
     d) what causes the seeming inefficiency with the server process receiving all the messages?
+        Are we talking about sleep here?
 
 
 Part 2: TCP

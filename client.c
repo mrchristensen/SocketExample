@@ -104,6 +104,7 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
+		printf("write() call\n");
 		if (write(sfd, argv[j], len) != len)
 		{
 			fprintf(stderr, "partial/failed write\n");
@@ -111,14 +112,16 @@ int main(int argc, char *argv[])
 		}
 		printf("Sent %ld bytes to server\n", len);
 
-		nread = read(sfd, buf, BUF_SIZE);
-		if (nread == -1)
-		{
-			perror("read");
-			exit(EXIT_FAILURE);
-		}
+		// Modify client.c such that it does not attempt to read from the socket--or print what it read--after writing to the socket.  For this one, comment out the appropriate code rather than removing it (you'll want to use it later).
+		// nread = read(sfd, buf, BUF_SIZE);
+		// if (nread == -1)
+		// {
+		// 	perror("read");
+		// 	exit(EXIT_FAILURE);
+		// }
 
-		printf("Received %zd bytes: %s\n", nread, buf);
+		// printf("Received %zd bytes: %s\n", nread, buf);
+		// Modify client.c such that it does not attempt to read from the socket--or print what it read--after writing to the socket.  For this one, comment out the appropriate code rather than removing it (you'll want to use it later).
 	}
 
 	exit(EXIT_SUCCESS);

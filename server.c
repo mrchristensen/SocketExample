@@ -97,8 +97,10 @@ int main(int argc, char *argv[])
 	for (;;)
 	{
 		peer_addr_len = sizeof(struct sockaddr_storage);
+		printf("recvfrom() call\n");
 		nread = recvfrom(sfd, buf, BUF_SIZE, 0,
 						 (struct sockaddr *)&peer_addr, &peer_addr_len);
+		sleep(2); //Modify server.c such that it sleeps for 2 seconds immediately after calling recvfrom() on the socket. (between 4 and 5)
 
 		if (nread == -1)
 			continue; /* Ignore failed request */
