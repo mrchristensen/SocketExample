@@ -1,10 +1,10 @@
 Part 1: UDP
 
 1.
-    a) What two system calls are used to create and prepare a (UDP) client socket for reading and writing?
-        read() and write()?
+    a) What two system calls are used to create and prepare a (UDP) client socket for reading and writing
+        socket() and conn()
     b) Describe how your client might be implemented differently if the latter call were not used.
-        ?
+        UPD doesn't need a secure a connection, would could just send stull straigt there before connection
 
 2. In the top-left "remote" pane, run the ./server executable on a port of your choosing (but should be above 1023). Show the command line you used.
         mrc621@bulldozer:~/sockets$ ./server 1111
@@ -39,16 +39,16 @@ Part 1: UDP
     b) assuming no network loss, how many datagrams have been received by the kernel of the server-side process before the server calls recvfrom() the second time;
         3
     c) how many total calls to recvfrom() are required for the server process to get all the datagrams/bytes that were sent; and
-        4, unless you count the read when we start the server - in which case 5?
-    d) what causes the seeming inefficiency with the server process receiving all the messages?
-        Are we talking about sleep here?
+        4
+    d) what causes the seeming inefficiency with the server process receiving all the messages
+        UDP reads the messages one a time, which makes things slow
 
 
 Part 2: TCP
 
-6. How does the role of the original socket (i.e., returned from the call to socket()) change with the changes you have made?
+6. How does the role of the original socket (i.e., returned from the call to socket()) change with the changes you have made
 
-7. With the new changes you have implemented, how have the semantics associated with the call to connect() changed?  That is, what will happen now when you call connect that is different from when you called connect with a UDP socket?
+7. With the new changes you have implemented, how have the semantics associated with the call to connect() changed.  That is, what will happen now when you call connect that is different from when you called connect with a UDP socket
 
 8.
     a) the command line you used;
@@ -73,7 +73,7 @@ Part 2: TCP
     a) how many calls to write() (or send()) are made by the client;
     b) assuming no network loss, how many bytes have been received by the kernel of the server-side process before the server calls recv() the second time;
     c) how many total calls to recv() are required for the server process to get all the bytes that were sent;
-    d) how and why does this differ from what you observed in #5?
+    d) how and why does this differ from what you observed in #5
 
 
 Part 3: Client modification
@@ -90,10 +90,10 @@ Part 3: Client modification
 
 Part 4: Review Questions
 
-16. What happens when you call read() (or recv()) on an open socket (UDP or TCP), and there is no data (datagrams or bytes) in the buffer to be read?
+16. What happens when you call read() (or recv()) on an open socket (UDP or TCP), and there is no data (datagrams or bytes) in the buffer to be read
 
-17. What happens when you call read() (or recv()) on an open socket, and you specify a length that is more the number of bytes ready to be read in the buffer (TCP) or the length of the next datagram (UDP)?
+17. What happens when you call read() (or recv()) on an open socket, and you specify a length that is more the number of bytes ready to be read in the buffer (TCP) or the length of the next datagram (UDP)
 
-18. What happens you you call read() (or recv()) on an open UDP socket, and you specify a length that is less than the length of the next datagram?
+18. What happens you you call read() (or recv()) on an open UDP socket, and you specify a length that is less than the length of the next datagram
 
-19. What happens you you call read() (or recv()) on an open TCP socket, and you specify a length that is less than the number of bytes ready to be read in the buffer?
+19. What happens you you call read() (or recv()) on an open TCP socket, and you specify a length that is less than the number of bytes ready to be read in the buffer
