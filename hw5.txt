@@ -1,0 +1,80 @@
+Part 1: UDP
+
+1.
+    a) What two system calls are used to create and prepare a (UDP) client socket for reading and writing?
+
+    b) Describe how your client might be implemented differently if the latter call were not used.
+
+2. In the top-left "remote" pane, run the ./server executable on a port of your choosing (but should be above 1023). Show the command line you used.
+
+3.
+    a) the command line you used;
+
+    b) its output; and
+
+    c) a brief explanation of what you see.
+
+4.
+    a) the command line you used to run the client program; and
+    b) the console output from the client.
+
+5.
+    a) how many calls to write() (or send()) are made by the client;
+    b) assuming no network loss, how many datagrams have been received by the kernel of the server-side process before the server calls recvfrom() the second time;
+    c) how many total calls to recvfrom() are required for the server process to get all the datagrams/bytes that were sent; and
+    d) what causes the seeming inefficiency with the server process receiving all the messages?
+
+
+Part 2: TCP
+
+6. How does the role of the original socket (i.e., returned from the call to socket()) change with the changes you have made?
+
+7. With the new changes you have implemented, how have the semantics associated with the call to connect() changed?  That is, what will happen now when you call connect that is different from when you called connect with a UDP socket?
+
+8.
+    a) the command line you used;
+    b) its output; and
+    c) a brief explanation of what you see.
+
+9.
+    a) the command line you used to run the client program; and
+    b) the console output from the client.
+
+10.
+    a) the command line you used;
+    b) its output; and
+    c) a brief explanation of what you see.
+
+11.
+    a) the command line you used;
+    b) its output; and
+    c) a brief explanation of what you see.
+
+12.
+    a) how many calls to write() (or send()) are made by the client;
+    b) assuming no network loss, how many bytes have been received by the kernel of the server-side process before the server calls recv() the second time;
+    c) how many total calls to recv() are required for the server process to get all the bytes that were sent;
+    d) how and why does this differ from what you observed in #5?
+
+
+Part 3: Client modification
+
+13.
+    a) the pipeline you used to run nc and its output (after the client finished executing); and
+    b) the command line you used to run the client program.
+
+14. 
+    a) show the command line you used to run the client program
+    b) show the contents of bestill.txt
+
+15. show the command line you used to run the client program
+
+Part 4: Review Questions
+
+16. What happens when you call read() (or recv()) on an open socket (UDP or TCP), and there is no data (datagrams or bytes) in the buffer to be read?
+
+17. What happens when you call read() (or recv()) on an open socket, and you specify a length that is more the number of bytes ready to be read in the buffer (TCP) or the length of the next datagram (UDP)?
+
+18. What happens you you call read() (or recv()) on an open UDP socket, and you specify a length that is less than the length of the next datagram?
+
+19. What happens you you call read() (or recv()) on an open TCP socket, and you specify a length that is less than the number of bytes ready to be read in the buffer?
