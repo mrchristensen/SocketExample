@@ -18,7 +18,7 @@ Part 1: UDP
         UNCONN        0              0                             0.0.0.0:17032                        0.0.0.0:*
         users:(("server",pid=1739,fd=3))
     c) a brief explanation of what you see.
-        Basically, its given us a report of a socket.  It says that we're currently unconnected, Recv-Q being zero means we have bytes not copied by the user program connected to this socket, 0 Send-Q means that there are 0 bytres not acknowledged by the remote host, while finally displaying the local address and port of the machine and the peer (or remote) address and port.  It also shows the program that is running that socket (the server)
+        Basically, its given us a report of a socket.  It says that we're currently unconnected, Recv-Q being zero means we have bytes not copied by the user program connected to this socket, 0 Send-Q means that there are 0 bytres not acknowledged by the remote host, while finally displaying the local address and port of the machine and the peer (or remote) address and port (with 0.0.0.0 being the wildcare ip address, which means we're listing on all of its ip addresses).  It also shows the program that is running that socket (the server)
 
 4.
     a) the command line you used to run the client program; and
@@ -47,33 +47,61 @@ Part 1: UDP
 Part 2: TCP
 
 6. How does the role of the original socket (i.e., returned from the call to socket()) change with the changes you have made
+        The socket now represents a connection stream to the server.  Instead of yeeting the packets over to the server blindly we now establish a connection to the server (whick the server also recognizes) and then send packets safetly through a stream
 
 7. With the new changes you have implemented, how have the semantics associated with the call to connect() changed.  That is, what will happen now when you call connect that is different from when you called connect with a UDP socket
+        When we connect we now establish a connection through a three way handshake (client says hey, server says I hear you, client says I got your response)
 
 8.
-    a) the command line you used;
+    a) the command line you used
+        mrc621@bulldozer:~/sockets$ ss -lt -p -n "sport = :17032"
     b) its output; and
+        State         Recv-Q         Send-Q                   Local Address:Port                    Peer Address:Port
+        LISTEN        0              100                            0.0.0.0:17032                        0.0.0.0:*
+        users:(("server",pid=4577,fd=3))
     c) a brief explanation of what you see.
+        It shows our server is in a state of listen for new connections, shows us the send and receive queues (with 0 and 100 bytes resoectivly), and then the local and peer addresses and ports (which both have the wildcare addresses of 0.0.0.0, which means they are listening to everything)
 
 9.
     a) the command line you used to run the client program; and
+        ./client bulldozer 17032 foo bar baz catvideo
     b) the console output from the client.
+        Sent 4 bytes to server
+        Received 4 bytes: foo
+        Sent 4 bytes to server
+        Received 4 bytes: bar
+        Sent 4 bytes to server
+        Received 4 bytes: baz
+        Sent 9 bytes to server
+        Received 9 bytes: catvideo
 
 10.
     a) the command line you used;
+        mrc621@bulldozer:~/sockets$ ss -t -p -n "sport = :17032"
     b) its output; and
+        State           Recv-Q       Send-Q              Local Address:Port               Peer Address:Port
+        CLOSE-WAIT      18           0                   192.168.2.185:17032             192.168.2.121:59198 
+         users:(("server",pid=10637,fd=4))
     c) a brief explanation of what you see.
+        The most interesting part of the output is the fact that our state is now CLOSE-WAIT, meaning the client has connected the server, completed the 3 way handshake, and is now in the process ofseding and recieving packets through streams.  We also see the receive and send queues, with re recieve queue ready to process those next three packets that we sent, and the local and peer addresses (which reflect the actual address that the connection is running on, as opposed to the wildcard addresses from before) meaning we can see what address our client is using and which address our server uses to recieve the connection
 
 11.
     a) the command line you used;
-    b) its output; and
+        mrc621@bulldozer:~/sockets$ ss -t -p -n "sport = :17032"
+    b) its output
+        State       Recv-Q        Send-Q                Local Address:Port               Peer Address:Port
     c) a brief explanation of what you see.
+        We see no output in the console besides the headers because the server is not activly connected anymore and thus won't show up in our command
 
 12.
     a) how many calls to write() (or send()) are made by the client;
+        4
     b) assuming no network loss, how many bytes have been received by the kernel of the server-side process before the server calls recv() the second time;
+        17
     c) how many total calls to recv() are required for the server process to get all the bytes that were sent;
+        2
     d) how and why does this differ from what you observed in #5
+        Because TCP can process many packets/datgrams at once by the time it gets to the second read (after 2 seconds of sleep) we have already recieved all the other packet (all 3 of them).  So we can process all 17 bytes of those 3 packets at once which speeds up the processing time
 
 
 Part 3: Client modification

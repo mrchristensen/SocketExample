@@ -55,12 +55,12 @@ int main(int argc, char *argv[])
 	 * or IPv6) is being used, so we specify AF_INET or AF_INET6 explicitly
 	 * in hints, depending on what is passed on on the command line.
 	 */
-	hints.ai_family = af;			/* Choose IPv4 or IPv6 */
-	hints.ai_socktype = SOCK_DGRAM; /* Datagram socket */
-	hints.ai_flags = AI_PASSIVE;	/* Wildcard IP address - i.e., listen
+	hints.ai_family = af;			 /* Choose IPv4 or IPv6 */
+	hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
+	hints.ai_flags = AI_PASSIVE;	 /* Wildcard IP address - i.e., listen
 					   on *all* IPv4 or *all* IPv6
 					   addresses */
-	hints.ai_protocol = 0;			/* Any protocol */
+	hints.ai_protocol = 0;			 /* Any protocol */
 	hints.ai_canonname = NULL;
 	hints.ai_addr = NULL;
 	hints.ai_next = NULL;
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if ((sfd = socket(af, SOCK_DGRAM, 0)) < 0)
+	if ((sfd = socket(af, SOCK_STREAM, 0)) < 0)
 	{
 		perror("Error creating socket");
 		exit(EXIT_FAILURE);
@@ -93,13 +93,20 @@ int main(int argc, char *argv[])
 
 	printf("Waiting for data on port %s...\n", argv[portindex]);
 
+	int ret = listen(sfd, 100); //prior to the "for" loop (i.e., "for (;;)"), use the listen() function on the TCP server socket (you can use a backlog value of 100)
+
+	peer_addr_len = sizeof(struct sockaddr_storage);
+	int fd = accept(sfd, (struct sockaddr *)&peer_addr, &peer_addr_len);
 	/* Read datagrams and echo them back to sender */
 	for (;;)
 	{
 		peer_addr_len = sizeof(struct sockaddr_storage);
 		printf("recvfrom() call\n");
-		nread = recvfrom(sfd, buf, BUF_SIZE, 0,
-						 (struct sockaddr *)&peer_addr, &peer_addr_len);
+		nread = recv(fd, buf, BUF_SIZE, 0);
+
+		if (nread == 0) //break out of the loop if recv() returns 0 bytes.  This is an indicator that the server has closed its end of the connection and is effectively EOF.
+			break;
+
 		sleep(2); //Modify server.c such that it sleeps for 2 seconds immediately after calling recvfrom() on the socket. (between 4 and 5)
 
 		if (nread == -1)
@@ -115,9 +122,7 @@ int main(int argc, char *argv[])
 		else
 			fprintf(stderr, "getnameinfo: %s\n", gai_strerror(s));
 
-		if (sendto(sfd, buf, nread, 0,
-				   (struct sockaddr *)&peer_addr,
-				   peer_addr_len) != nread)
+		if (send(fd, buf, nread, 0) != nread)
 			perror("Error sending response");
 	}
 }

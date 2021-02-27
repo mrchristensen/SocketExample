@@ -7,6 +7,7 @@
 #include <string.h>
 
 #define BUF_SIZE 500
+#define MAX_SIZE 4096
 
 int main(int argc, char *argv[])
 {
@@ -50,9 +51,9 @@ int main(int argc, char *argv[])
 	/* Obtain address(es) matching host/port */
 
 	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = af;			/* Allow IPv4, IPv6, or both, depending on
+	hints.ai_family = af;			 /* Allow IPv4, IPv6, or both, depending on
 				    what was specified on the command line. */
-	hints.ai_socktype = SOCK_DGRAM; /* Datagram socket */
+	hints.ai_socktype = SOCK_STREAM; /* Datagram socket */
 	hints.ai_flags = 0;
 	hints.ai_protocol = 0; /* Any protocol */
 
@@ -75,9 +76,11 @@ int main(int argc, char *argv[])
 		if (sfd == -1)
 			continue;
 
+		printf("About to connect\n");
 		if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
 			break; /* Success */
 
+		printf("Connection no good, closing sfd\n");
 		close(sfd);
 	}
 
@@ -87,7 +90,21 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	printf("About to free addrinfo\n");
 	freeaddrinfo(result); /* No longer needed */
+
+	printf("About to call fread()\n");
+	// reads (using fread()) input from stdin into a buffer (char []) until EOF is reached (max total bytes 4096)
+	// makes note of how many bytes were received from stdin and stored in the buffer
+	// int numBytes = fread(buf, sizeof(char), MAX_SIZE, stdin);
+	// // send all the data that was received
+	// printf("read %d bytes from stdin\n", numBytes);
+	// while (numBytes > 0)
+	// {
+	// 	int bytesWrote = write(sfd, buf, numBytes);
+	// 	printf("Sent %d bytes to server\n", bytesWrote);
+	// 	numBytes -= bytesWrote;
+	// }
 
 	/* Send remaining command-line arguments as separate
 	   datagrams, and read responses from server */
@@ -112,7 +129,6 @@ int main(int argc, char *argv[])
 		}
 		printf("Sent %ld bytes to server\n", len);
 
-		// Modify client.c such that it does not attempt to read from the socket--or print what it read--after writing to the socket.  For this one, comment out the appropriate code rather than removing it (you'll want to use it later).
 		// nread = read(sfd, buf, BUF_SIZE);
 		// if (nread == -1)
 		// {
@@ -121,7 +137,6 @@ int main(int argc, char *argv[])
 		// }
 
 		// printf("Received %zd bytes: %s\n", nread, buf);
-		// Modify client.c such that it does not attempt to read from the socket--or print what it read--after writing to the socket.  For this one, comment out the appropriate code rather than removing it (you'll want to use it later).
 	}
 
 	exit(EXIT_SUCCESS);
