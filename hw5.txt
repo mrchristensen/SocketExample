@@ -153,9 +153,12 @@ Part 3: Client modification
 Part 4: Review Questions
 
 16. What happens when you call read() (or recv()) on an open socket (UDP or TCP), and there is no data (datagrams or bytes) in the buffer to be read
+    If the socket is non-blocking (which is the default state for the socket) then it will hang and wait until their is data that is able to be returned.  If it's blocked than it'll return a -1 immediatly
 
 17. What happens when you call read() (or recv()) on an open socket, and you specify a length that is more the number of bytes ready to be read in the buffer (TCP) or the length of the next datagram (UDP)
+    read()/recv() will simply load into the buffer the actual avaliable data and return the number of actual bytes read (no harm to foul, just simply returns what it can and reports that it's less by reporting the actual number of bytes read as the return val of the function)
 
 18. What happens you you call read() (or recv()) on an open UDP socket, and you specify a length that is less than the length of the next datagram
+    With UDP we get the get the first section of bytes spesified by the length while the rest of the datagram is discarded
 
 19. What happens you you call read() (or recv()) on an open TCP socket, and you specify a length that is less than the number of bytes ready to be read in the buffer
