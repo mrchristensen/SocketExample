@@ -137,8 +137,11 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	readBuf[totalBytsRead / sizeof(char)] = '\0';
-	printf("%s", readBuf);
+	readBuf[totalBytsRead] = '\0';
+
+	write(1, readBuf, totalBytsRead);
+
+	// printf("%s", readBuf);
 	// printf("End of file on read()\n");
 
 	/* Send remaining command-line arguments as separate
