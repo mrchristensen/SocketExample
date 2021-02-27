@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 		// printf("Bits read: %ld\n", nread);
 		totalBytsRead += nread;
 		// printf("Total number of bits read to this point: %ld\n", totalBits);
-		if (totalBytsRead > MAX_SIZE)
+		if (totalBytsRead > MAX_READ)
 		{
 			break;
 		}
