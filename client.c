@@ -7,7 +7,9 @@
 #include <string.h>
 
 #define BUF_SIZE 500
+#define READ_SIZE 512
 #define MAX_SIZE 4096
+#define MAX_READ 16384
 
 int main(int argc, char *argv[])
 {
@@ -76,11 +78,11 @@ int main(int argc, char *argv[])
 		if (sfd == -1)
 			continue;
 
-		printf("About to connect\n");
+		// printf("About to connect\n");
 		if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1)
 			break; /* Success */
 
-		printf("Connection no good, closing sfd\n");
+		// printf("Connection no good, closing sfd\n");
 		close(sfd);
 	}
 
@@ -90,54 +92,87 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	printf("About to free addrinfo\n");
+	// printf("About to free addrinfo\n");
 	freeaddrinfo(result); /* No longer needed */
 
-	printf("About to call fread()\n");
+	// printf("About to call fread()\n");
 	// reads (using fread()) input from stdin into a buffer (char []) until EOF is reached (max total bytes 4096)
 	// makes note of how many bytes were received from stdin and stored in the buffer
-	// int numBytes = fread(buf, sizeof(char), MAX_SIZE, stdin);
-	// // send all the data that was received
+	int numBytes = fread(buf, sizeof(char), MAX_SIZE, stdin);
+	int totalTargetNumBytes = numBytes;
+	// printf("totalTargetNumBytes: %d\n", totalTargetNumBytes);
+	// send all the data that was received
 	// printf("read %d bytes from stdin\n", numBytes);
-	// while (numBytes > 0)
-	// {
-	// 	int bytesWrote = write(sfd, buf, numBytes);
-	// 	printf("Sent %d bytes to server\n", bytesWrote);
-	// 	numBytes -= bytesWrote;
-	// }
+	while (numBytes > 0)
+	{
+		int bytesWrote = write(sfd, buf, numBytes);
+		// printf("Sent %d bytes to server\n", bytesWrote);
+		numBytes -= bytesWrote;
+	}
+
+	char readBuf[MAX_READ];
+
+	ssize_t totalBytsRead = 0;
+	// printf("Bits read: %ld\n", nread);
+	while ((nread = read(sfd, readBuf + totalBytsRead, BUF_SIZE)) != 0)
+	{
+
+		// printf("Buffer so far: %s", readBuf);
+		// printf("About to call read()\n");
+
+		// printf("Finished call to read()\n");
+		// printf("Buffer after read: %s", readBuf);
+		// printf("Bits read: %ld\n", nread);
+		totalBytsRead += nread;
+		// printf("Total number of bits read to this point: %ld\n", totalBits);
+		if (totalBytsRead > MAX_SIZE)
+		{
+			break;
+		}
+	}
+	// printf("Total number of bits read: %ld\n", totalBits);
+	if (nread == -1)
+	{
+		perror("read");
+		exit(EXIT_FAILURE);
+	}
+
+	readBuf[totalBytsRead / sizeof(char)] = '\0';
+	printf("%s", readBuf);
+	// printf("End of file on read()\n");
 
 	/* Send remaining command-line arguments as separate
-	   datagrams, and read responses from server */
+	//    datagrams, and read responses from server */
 
-	for (j = hostindex + 2; j < argc; j++)
-	{
-		len = strlen(argv[j]) + 1;
-		/* +1 for terminating null byte */
+	// for (j = hostindex + 2; j < argc; j++)
+	// {
+	// 	len = strlen(argv[j]) + 1;
+	// 	/* +1 for terminating null byte */
 
-		if (len + 1 > BUF_SIZE)
-		{
-			fprintf(stderr,
-					"Ignoring long message in argument %d\n", j);
-			continue;
-		}
+	// 	if (len + 1 > BUF_SIZE)
+	// 	{
+	// 		fprintf(stderr,
+	// 				"Ignoring long message in argument %d\n", j);
+	// 		continue;
+	// 	}
 
-		printf("write() call\n");
-		if (write(sfd, argv[j], len) != len)
-		{
-			fprintf(stderr, "partial/failed write\n");
-			exit(EXIT_FAILURE);
-		}
-		printf("Sent %ld bytes to server\n", len);
+	// 	printf("write() call\n");
+	// 	if (write(sfd, argv[j], len) != len)
+	// 	{
+	// 		fprintf(stderr, "partial/failed write\n");
+	// 		exit(EXIT_FAILURE);
+	// 	}
+	// 	printf("Sent %ld bytes to server\n", len);
 
-		// nread = read(sfd, buf, BUF_SIZE);
-		// if (nread == -1)
-		// {
-		// 	perror("read");
-		// 	exit(EXIT_FAILURE);
-		// }
+	// 	// nread = read(sfd, buf, BUF_SIZE);
+	// 	// if (nread == -1)
+	// 	// {
+	// 	// 	perror("read");
+	// 	// 	exit(EXIT_FAILURE);
+	// 	// }
 
-		// printf("Received %zd bytes: %s\n", nread, buf);
-	}
+	// 	// printf("Received %zd bytes: %s\n", nread, buf);
+	// }
 
 	exit(EXIT_SUCCESS);
 }
